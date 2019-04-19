@@ -1,0 +1,1 @@
+generating_board(Pos, List, N, M):- A is random(N), B is random(M).
