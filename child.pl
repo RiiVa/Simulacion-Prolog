@@ -1,6 +1,5 @@
 :- dynamic n/1 , m/1.
-:-include(paint).
-
+%:- include(paint).
 
 validate_child([PosX|PosY],[X|Y]) :- 
     abs(PosX - X) < 2 ,
@@ -95,7 +94,8 @@ child_dirty(Pos, ListChild, ListDirty, ListCorral, ListObst, P) :-
     Count2 is Count1 + 1, 
     %T is [[0,1],[1,0],[-1,0],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]] ,
     append([] ,[[0,1],[1,0],[-1,0],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]], T),
-    my_map(T, Pos, Result ),
+    my_map(T, Pos, Result1 ),
+    append(Result1, [Pos], Result),
     my_dirt(Count2,Count),
     child_dirty_2(Result, Count, ListDirty, ListCorral, ListObst, P).
 
@@ -112,6 +112,9 @@ child_dirty_2(Result, Count , ListDirty, ListCorral, ListObst , P):-
     validate_pos_dirt(R, ListCorral,T,ListObst,P).
 
 validate_pos_dirt(Pos,ListCorral,ListDirty,ListObst, P):- 
+    m(M),
+    n(N),
+    validate_pos(Pos, N, M),
     not(member(Pos,ListCorral)) , 
     not(member(Pos,ListDirty)), 
     not(member(Pos, ListObst)),!,
@@ -133,7 +136,7 @@ validate_move(Pos, R, ListObst, ListChild, ListCorral, ListRobot,ListDirty, NewC
     append([],ListObst, NewObst),
     my_update(ListChild, Pos, R, NewChild).
 validate_move([X|Y], [RX|RY], ListObst, ListChild, ListCorral, ListRobot,ListDirty, NewChild, NewObst):-
-    member(R,ListObst),!,
+    member([RX,RY],ListObst),!,
     DirX is RX - X,
     DirY is RY - Y,
     append([DirX],[DirY],Dir),
@@ -176,10 +179,18 @@ child_move(Pos, ListDirty, ListObst, ListChild, ListCorral,ListRobot , NewChild,
 
 
 child_agent(Pos, ListDirty, ListObst, ListChild, ListCorral,ListRobot, NewDirty,NewChild, NewObst) :- 
+    not(member(Pos,ListRobot)),
+    not(member(Pos,ListCorral)),
     child_dirty(Pos ,ListChild, ListDirty, ListCorral, ListObst, NewDirty) ,
-   /* append(ListChild, [], NewChild),
+    /* append(ListChild, [], NewChild),
     append(ListObst, [], NewObst). */
-    child_move(Pos, NewDirty, ListObst, ListChild, ListCorral,ListRobot , NewChild, NewObst).
+    child_move(Pos, NewDirty, ListObst, ListChild, ListCorral,ListRobot , NewChild, NewObst),!,
+    append([],NewObst,_).
+child_agent(Pos, ListDirty, ListObst, ListChild, ListCorral,ListRobot, NewDirty,NewChild, NewObst) :- 
+    append([], ListChild, NewChild),
+    append([], ListObst, NewObst),
+    append([], ListDirty, NewDirty).
+
 /*
 start:-
 
@@ -190,11 +201,12 @@ start:-
     %push_obst(Pos, Dir, ListObst, ListChild, ListCorral, ListRobot,ListDirty,Original, NewChild, NewObst):-
     append([],[[1,2],[0,2],[1,3]],Child),
     append([],[[1,1],[2,2],[3,3]],Obst),
-    print_general(10,10,[],Obst,Child,[[3,4]],[[4,4]]),
-    %push_obst([0,0],[1,1], Obst,Child,[[4,4]],[],[],[1,1], NewChild, NewObst),
-    child_agent([1,2],[],Obst,Child,[[4,4]],[[3,4]],NewDirty,NewChild,NewObst),
+    print_general(10,10,[],Obst,Child,[[0,3]],[[4,4]]),
+    
+    %child_agent([1,2],[],Obst,Child,[[4,4]],[[3,4]],NewDirty,NewChild,NewObst),
+    validate_move([0,2], [0,3], Obst, Child, [], [[0,3]],[], NewChild, NewObst),
     nl,nl,nl,nl,
-    print_general(10,10,NewDirty,NewObst,NewChild,[[3,4]],[[4,4]]).
+    print_general(10,10,[],NewObst,NewChild,[[0,3]],[[4,4]]).
     
     %my_update([[1,2],[2,3],[3,3],[1,1]],[1,1],[2,2],R),
    % write(R).

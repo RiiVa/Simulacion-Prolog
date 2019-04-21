@@ -1,5 +1,5 @@
-:- dynamic n/1 m/1.
-include(childrens).
+:- dynamic n/1, m/1.
+
 
 insert_char(Pos, _, _, ListChild, ListBot, ListCorral, R):- 
     member(Pos, ListCorral), 
@@ -26,7 +26,7 @@ insert_char(Pos, _, _, ListChild, _, ListCorral, R):-
 insert_char(Pos, _, _, _, ListBot, ListCorral, R):- 
     member(Pos, ListCorral), 
     member(Pos, ListBot),
-    string_concat('','  [R] ', R).
+    string_concat('','  [R]|', R).
 insert_char(Pos, _, _, ListChild, ListBot, _, R):- 
     member(Pos, ListBot), 
     member(Pos, ListChild),

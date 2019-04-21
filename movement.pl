@@ -8,34 +8,72 @@ direction8(X:Y,[X1,Y1],NoDeseadas, N, M):- Y1 is Y+1, X1 is X-1, Y1 > -1, X1 > -
 direction8(X:Y,[X1,Y1],NoDeseadas, N, M):- Y1 is Y-1, X1 is X+1, Y1 > -1, X1 > -1, Y1 < M, X1 < N, not(member([X1,Y1],NoDeseadas)).
 direction8(X:Y,[X1,Y1],NoDeseadas, N, M):- Y1 is Y-1, X1 is X-1, Y1 > -1, X1 > -1, Y1 < M, X1 < N, not(member([X1,Y1],NoDeseadas)).
 
-
-
-
 % Dada una posicion devuelve las 8 posiciones validas alrededor de esta.
 all_directions8([X0:Y0], R, L) :-
      n(N), m(M),
      findall([X,Y], direction8(X0:Y0,[X,Y], L, N, M), R).
 
-% direction(X:Y,X1:Y, N, M):-
-%     X1 is X-1,
-%     X1 > -1,
-%     X1 < N.
+ordered_union(L, [], R):- append(L, [], R), !.
+ordered_union([], L, R):- append(L, [], R), !.
+ordered_union(L, [H|T], R):-
+    ((not(member(H,L)), append(L,[H],R1), ordered_union(R1, T, R));
+    (member(H,L), ordered_union(L, T, R))).
 
-nearest_child(Cola, Bebe, Bebes, Obstaculos):-
+nearest_child(Cola, Bebe, Bebes, Obstaculos, Corrales):-
     Cola = [H|T],
     H = [X,Y],
 
     ((   
-        not(member(H, Bebes)),
+        (not(member(H, Bebes));member(H, Corrales)),
         append([H], Obstaculos, NoDeseadas),
         all_directions8([X:Y],R1, NoDeseadas),
         ordered_union(T, R1, Cola1),
-        nearest_child(Cola1, Bebe, Bebes, NoDeseadas)
+        nearest_child(Cola1, Bebe, Bebes, NoDeseadas,Corrales)
     );
 
-% all_valid_positions([[X,Y]], R):-
-%     n(N), m(M),
-%     all_directions([X:Y], R, N, M).
+    (
+        member(H, Bebes),
+        not(member(H, Corrales)),
+        append(H, [], Bebe)
+    )), !.
+
+nearest_corral(Cola, Corral, Bebes, Corrales, Obstaculos):-
+    Cola = [H|T],
+    H = [X,Y],
+
+    (
+        (
+            (not(member(H, Corrales));member(H, Bebes)),
+            append([H], Obstaculos, NoDeseadas),
+            all_directions8([X:Y],R1, NoDeseadas),
+            ordered_union(T, R1, Cola1),
+            nearest_corral(Cola1, Corral, Bebes, Corrales, NoDeseadas)
+        );
+
+        (
+            member(H, Corrales),
+            not(member(H, Bebes)),
+            append(H, [], Corral)
+        )
+    ), !.
+
+nearest_dirt(Cola, Dirt, Suciedades, Obstaculos):-
+    Cola = [H|T],
+    H = [X,Y],
+
+    ((   
+        not(member(H, Suciedades)),
+        append([H], Obstaculos, NoDeseadas),
+        all_directions8([X:Y],R1, NoDeseadas),
+        ordered_union(T, R1, Cola1),
+        nearest_dirt(Cola1, Dirt, Suciedades, NoDeseadas)
+    );
+
+    (
+        member(H, Suciedades),
+        append(H, [], Dirt)
+    )), !.
+
 
 % Norte, Sur, Este, Oeste, dentro de la matriz y no pertenece a una lista(List).
 direction(X:Y,X1:Y,List, N, M):- X1 is X-1, X1 > -1, X1 < N, not(member([X1,Y],List)).
